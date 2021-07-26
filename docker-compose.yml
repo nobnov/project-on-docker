@@ -1,0 +1,40 @@
+version: '3.8'
+
+services:
+  db:
+    image: postgres
+    ports:
+            - 5432:5432
+    environment:
+            - POSTGRES_PASSWORD=postgres
+            - POSTGRES_DB=postgres
+            - POSTGRES_USER=postgres
+    volumes:
+            - db-data:/var/lib/postgresql/data #永続化
+    container_name: project_postgres
+
+
+  web:
+    restart: always
+    build: .
+    command: gunicorn WSGIPATH.wsgi:application --bind 0.0.0.0:8000
+    volumes:
+            - ./PROJECTNAME:/code
+    ports:
+            - 8000:8000
+    depends_on:
+            - db
+    container_name: project_django
+
+  nginx:
+    build: ./nginx
+    ports:
+            - 80:80
+    volumes:
+            - ./PROJECTNAME/static:/static
+    depends_on:
+            - web
+    container_name: project_nginx
+ 
+volumes:
+    db-data:
